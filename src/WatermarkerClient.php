@@ -111,10 +111,16 @@ class WatermarkerClient
      * @param string $path The path to the file.
      * @param string $openMode The mode used to open the file.
      * @return StreamInterface
+     * @throws Exception
      */
     public function createStreamFromFile(string $path, string $openMode = 'r'): StreamInterface
     {
-        return $this->streamFactory->createStreamFromFile($path, $openMode);
+        $f = fopen($path, $openMode);
+        if ($f === false) {
+            throw new Exception("The file '$path' could not be opened", Exception::ERROR_FILE_OPEN);
+        }
+
+        return $this->streamFactory->createStreamFromResource($f);
     }
 
     /**
