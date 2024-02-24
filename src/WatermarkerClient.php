@@ -107,7 +107,6 @@ class WatermarkerClient
     /**
      * Opens a local file and creates a stream from it.
      *
-     * @alias StreamFactoryInterface::createStreamFromFile()
      * @param string $path The path to the file.
      * @param string $openMode The mode used to open the file.
      * @return StreamInterface
