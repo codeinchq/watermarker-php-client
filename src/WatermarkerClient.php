@@ -124,7 +124,7 @@ class WatermarkerClient
     }
 
     /**
-     * Opens a local file and creates a stream from it.
+     * Saves a stream to a local file.
      *
      * @param StreamInterface $stream
      * @param string $path The path to the file.
