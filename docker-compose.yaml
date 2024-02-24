@@ -1,0 +1,5 @@
+services:
+  watermarker:
+    image: codeinchq/watermarker:latest
+    ports:
+      - "3000:3000"

@@ -1,0 +1,152 @@
+<?php
+/*
+ * Copyright 2024 Code Inc. <https://www.codeinc.co>
+ *
+ * Use of this source code is governed by an MIT-style
+ * license that can be found in the LICENSE file or at
+ * https://opensource.org/licenses/MIT.
+ */
+
+declare(strict_types=1);
+
+namespace CodeInc\WatermarkerClient;
+
+use Http\Discovery\Psr17FactoryDiscovery;
+use Http\Discovery\Psr18ClientDiscovery;
+use Http\Message\MultipartStream\MultipartStreamBuilder;
+use Psr\Http\Client\ClientExceptionInterface;
+use Psr\Http\Client\ClientInterface;
+use Psr\Http\Message\RequestFactoryInterface;
+use Psr\Http\Message\StreamFactoryInterface;
+use Psr\Http\Message\StreamInterface;
+
+/**
+ * Class WatermarkerClient
+ *
+ * @package CodeInc\WatermarkerClient
+ * @author Joan Fabrégat <joan@codeinc.co>
+ * @link https://github.com/codeinchq/watermarker-php-client
+ * @link https://github.com/codeinchq/watermarker
+ * @license MIT <https://opensource.org/licenses/MIT>
+ */
+class WatermarkerClient
+{
+    public function __construct(
+        private readonly string $baseUrl,
+        private ClientInterface|null $client = null,
+        private StreamFactoryInterface|null $streamFactory = null,
+        private RequestFactoryInterface|null $requestFactory = null,
+    ) {
+        $this->client ??= Psr18ClientDiscovery::find();
+        $this->streamFactory ??= Psr17FactoryDiscovery::findStreamFactory();
+        $this->requestFactory ??= Psr17FactoryDiscovery::findRequestFactory();
+    }
+
+    /**
+     * Applies a watermark to an image using the WATERMARKER API.
+     *
+     * @param StreamInterface|resource|string $imageStream The PDF content.
+     * @param StreamInterface|resource|string $watermarkStream The watermark content.
+     * @param ConvertOptions $options The convert options.
+     * @return StreamInterface
+     * @throws Exception
+     */
+    public function apply(
+        mixed $imageStream,
+        mixed $watermarkStream,
+        ConvertOptions $options = new ConvertOptions()
+    ): StreamInterface {
+        try {
+            // building the multipart stream
+            $multipartStreamBuilder = (new MultipartStreamBuilder($this->streamFactory))
+                ->addResource('image', $imageStream)
+                ->addResource('watermark', $watermarkStream)
+                ->addResource('size', (string)$options->size)
+                ->addResource('position', $options->position->value)
+                ->addResource('format', $options->format->value)
+                ->addResource('quality', (string)$options->quality);
+
+            if ($options->blur !== null) {
+                $multipartStreamBuilder->addResource('blur', (string)$options->blur);
+            }
+            if ($options->opacity !== null) {
+                $multipartStreamBuilder->addResource('opacity', (string)$options->opacity);
+            }
+
+            // sending the request
+            $response = $this->client->sendRequest(
+                $this->requestFactory
+                    ->createRequest("POST", $this->getConvertEndpointUri())
+                    ->withHeader(
+                        "Content-Type",
+                        "multipart/form-data; boundary={$multipartStreamBuilder->getBoundary()}"
+                    )
+                    ->withBody($multipartStreamBuilder->build())
+            );
+        } catch (ClientExceptionInterface $e) {
+            throw new Exception(
+                message: "An error occurred while sending the request to the WATERMARKER API",
+                code: Exception::ERROR_REQUEST,
+                previous: $e
+            );
+        }
+
+        // checking the response
+        if ($response->getStatusCode() !== 200) {
+            throw new Exception(
+                message: "The WATERMARKER API returned an error {$response->getStatusCode()}",
+                code: Exception::ERROR_RESPONSE,
+                previous: new Exception((string)$response->getBody())
+            );
+        }
+
+        // returning the response
+        return $response->getBody();
+    }
+
+    /**
+     * Opens a local file and creates a stream from it.
+     *
+     * @alias StreamFactoryInterface::createStreamFromFile()
+     * @param string $path The path to the file.
+     * @param string $openMode The mode used to open the file.
+     * @return StreamInterface
+     */
+    public function createStreamFromFile(string $path, string $openMode = 'r'): StreamInterface
+    {
+        return $this->streamFactory->createStreamFromFile($path, $openMode);
+    }
+
+    /**
+     * Opens a local file and creates a stream from it.
+     *
+     * @param StreamInterface $stream
+     * @param string $path The path to the file.
+     * @param string $openMode The mode used to open the file.
+     * @throws Exception
+     */
+    public function saveStreamToFile(StreamInterface $stream, string $path, string $openMode = 'w'): void
+    {
+        $f = fopen($path, $openMode);
+        if ($f === false) {
+            throw new Exception("The file '$path' could not be opened", Exception::ERROR_FILE_OPEN);
+        }
+
+        stream_copy_to_stream($stream->detach(), $f);
+        fclose($f);
+    }
+
+    /**
+     * Returns the convert endpoint URI.
+     *
+     * @return string
+     */
+    private function getConvertEndpointUri(): string
+    {
+        $url = $this->baseUrl;
+        if (!str_ends_with($url, '/')) {
+            $url .= '/';
+        }
+        return "{$url}apply";
+    }
+}
