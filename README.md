@@ -1,4 +1,6 @@
-# watermarker PHP client
+# Watermarker API client
+
+![Tests](https://github.com/codeinchq/watermarker-php-client/actions/workflows/phpunit.yml/badge.svg)
 
 This repository contains a PHP 8.2+ client library for watermarking images using the [watermarker](https://github.com/codeinchq/watermarker) service.
 
