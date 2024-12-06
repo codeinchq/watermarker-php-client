@@ -6,7 +6,7 @@ This repository contains a PHP 8.2+ client library for watermarking images using
 
 ## Installation
 
-The recommended way to install the library is through [Composer](http://getcomposer.org):
+The library is available on [Packagist](https://packagist.org/packages/codeinc/watermarker-client). The recommended way to install it is via Composer:
 
 ```bash
 composer require codeinc/watermarker-client
