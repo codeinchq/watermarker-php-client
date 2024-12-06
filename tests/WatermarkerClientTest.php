@@ -29,7 +29,22 @@ final class WatermarkerClientTest extends TestCase
     private const string DEFAULT_WATERMARKER_BASE_URL = 'http://localhost:3000';
     private const string TEST_IMG_PATH = __DIR__.'/assets/doc.png';
     private const string TEST_WATERMARK_PATH = __DIR__.'/assets/watermark.png';
-    private const string TEST_RESULT_PATH = __DIR__.'/assets/watermarked.jpg';
+    private const string TEST_RESULT_PATH = '/tmp/watermarked.jpg';
+
+    public function testHealth(): void
+    {
+        // testing a healthy service
+        $client = $this->getNewClient();
+        $this->assertNotFalse($client->checkServiceHealth(), "The service is not healthy.");
+
+        // testing a non-existing service
+        $client = new WatermarkerClient('https://example.com');
+        $this->assertFalse($client->checkServiceHealth(), "The service is healthy.");
+
+        // testing a non-existing url
+        $client = new WatermarkerClient('https://example-NQrkB6F6MwuXesMrBhqx.com');
+        $this->assertFalse($client->checkServiceHealth(), "The service is healthy.");
+    }
 
     /**
      * @throws Exception
