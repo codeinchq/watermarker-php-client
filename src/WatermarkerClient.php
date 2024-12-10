@@ -24,30 +24,45 @@ use Psr\Http\Message\StreamInterface;
  * Class WatermarkerClient
  *
  * @package CodeInc\WatermarkerClient
- * @author Joan Fabrégat <joan@codeinc.co>
- * @link https://github.com/codeinchq/watermarker-php-client
- * @link https://github.com/codeinchq/watermarker
+ * @author  Joan Fabrégat <joan@codeinc.co>
+ * @link    https://github.com/codeinchq/watermarker-php-client
+ * @link    https://github.com/codeinchq/watermarker
  * @license MIT <https://opensource.org/licenses/MIT>
  */
-class WatermarkerClient
+readonly class WatermarkerClient
 {
+    private ClientInterface $client;
+    private StreamFactoryInterface $streamFactory;
+    private RequestFactoryInterface $requestFactory;
+
+    /**
+     * WatermarkerClient constructor.
+     *
+     * @param string $baseUrl                              The base URL of the WATERMARKER API.
+     * @param ClientInterface|null $client                 The HTTP client (optional, uses the PSR-18 discovery by
+     *                                                     default).
+     * @param StreamFactoryInterface|null $streamFactory   The stream factory (optional, uses the PSR-17 discovery by
+     *                                                     default).
+     * @param RequestFactoryInterface|null $requestFactory The request factory (optional, uses the PSR-17 discovery by
+     *                                                     default).
+     */
     public function __construct(
-        private readonly string $baseUrl,
-        private ClientInterface|null $client = null,
-        private StreamFactoryInterface|null $streamFactory = null,
-        private RequestFactoryInterface|null $requestFactory = null,
+        private string $baseUrl,
+        ClientInterface|null $client = null,
+        StreamFactoryInterface|null $streamFactory = null,
+        RequestFactoryInterface|null $requestFactory = null,
     ) {
-        $this->client ??= Psr18ClientDiscovery::find();
-        $this->streamFactory ??= Psr17FactoryDiscovery::findStreamFactory();
-        $this->requestFactory ??= Psr17FactoryDiscovery::findRequestFactory();
+        $this->client = $client ?? Psr18ClientDiscovery::find();
+        $this->streamFactory = $streamFactory ?? Psr17FactoryDiscovery::findStreamFactory();
+        $this->requestFactory = $requestFactory ?? Psr17FactoryDiscovery::findRequestFactory();
     }
 
     /**
      * Applies a watermark to an image using the WATERMARKER API.
      *
-     * @param StreamInterface|resource|string $imageStream The PDF content.
+     * @param StreamInterface|resource|string $imageStream     The PDF content.
      * @param StreamInterface|resource|string $watermarkStream The watermark content.
-     * @param ConvertOptions $options The convert options.
+     * @param ConvertOptions $options                          The convert options.
      * @return StreamInterface
      * @throws Exception
      */
@@ -107,7 +122,7 @@ class WatermarkerClient
     /**
      * Opens a local file and creates a stream from it.
      *
-     * @param string $path The path to the file.
+     * @param string $path     The path to the file.
      * @param string $openMode The mode used to open the file.
      * @return StreamInterface
      * @throws Exception
@@ -126,7 +141,7 @@ class WatermarkerClient
      * Saves a stream to a local file.
      *
      * @param StreamInterface $stream
-     * @param string $path The path to the file.
+     * @param string $path     The path to the file.
      * @param string $openMode The mode used to open the file.
      * @throws Exception
      */
