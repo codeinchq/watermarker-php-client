@@ -183,7 +183,7 @@ readonly class WatermarkerClient
      *
      * @return bool Health check response, expected to be "ok".
      */
-    public function checkServiceHealth(): bool
+    public function isHealthy(): bool
     {
         try {
             $response = $this->client->sendRequest(
