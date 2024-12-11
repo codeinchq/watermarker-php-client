@@ -3,6 +3,9 @@
 [![Code Inc.](https://img.shields.io/badge/Code%20Inc.-Watermarker-blue)](https://github.com/codeinchq/watermarker)
 ![Tests](https://github.com/codeinchq/watermarker-php-client/actions/workflows/phpunit.yml/badge.svg)
 
+> [!IMPORTANT]  
+> This client is deprecated and is replaced by the [Document Cloud PHP Client](https://github.com/codeinchq/document-cloud-php-client)
+
 This repository contains a PHP 8.2+ client library for watermarking images using the [watermarker](https://github.com/codeinchq/watermarker) service.
 
 ## Installation
